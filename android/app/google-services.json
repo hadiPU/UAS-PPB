@@ -1,0 +1,76 @@
+{
+  "project_info": {
+    "project_number": "395225570784",
+    "project_id": "blangkis-4c2ff",
+    "storage_bucket": "blangkis-4c2ff.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:395225570784:android:91bb1725f4d1167aae1f85",
+        "android_client_info": {
+          "package_name": "com.blangkis"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "395225570784-561rk9uu1q0uusd9u9kab997hpsvbdsf.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCh8xLw7WFrXCWvg83jYWE3RBNp84ZWKwQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "395225570784-561rk9uu1q0uusd9u9kab997hpsvbdsf.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:395225570784:android:81708b66a7263c97ae1f85",
+        "android_client_info": {
+          "package_name": "com.blangkis.umkmblangkis"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "395225570784-qmmccqmthhfb6lqsrhv0oe0laj1t4p2o.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.blangkis.umkmblangkis",
+            "certificate_hash": "6494e6849a194ccd0fd845b40bc3a8a0501cb6a7"
+          }
+        },
+        {
+          "client_id": "395225570784-561rk9uu1q0uusd9u9kab997hpsvbdsf.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCh8xLw7WFrXCWvg83jYWE3RBNp84ZWKwQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "395225570784-561rk9uu1q0uusd9u9kab997hpsvbdsf.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
