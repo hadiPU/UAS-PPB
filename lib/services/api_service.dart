@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import '../models/product.dart';
 
@@ -75,7 +76,7 @@ class ApiService {
   // ===================== ORDER =========================
   // =====================================================
 
-  /// ADD ORDER (PAYMENT)
+  /// ADD ORDER (VERSI LAMA - TIDAK DIUBAH)
   static Future<bool> addOrder({
     required int userId,
     required int total,
@@ -98,12 +99,36 @@ class ApiService {
     return data['status'] == 'success';
   }
 
-  /// GET ALL ORDERS (ADMIN)
-  static Future<List<dynamic>> getOrders() async {
-    final res = await http.get(
-      Uri.parse("$baseUrl/get_orders.php"),
+  /// ADD ORDER + RETURN ORDER ID (FUNGSI BARU)
+  static Future<int?> addOrderWithId({
+    required int userId,
+    required int total,
+    required int bayar,
+    required int kembalian,
+    required List<Map<String, dynamic>> items,
+  }) async {
+    final res = await http.post(
+      Uri.parse("$baseUrl/add_order.php"),
+      body: {
+        "user_id": userId.toString(),
+        "total": total.toString(),
+        "bayar": bayar.toString(),
+        "kembalian": kembalian.toString(),
+        "items": json.encode(items),
+      },
     );
 
+    final data = json.decode(res.body);
+
+    if (data['status'] == 'success') {
+      return int.tryParse(data['order_id'].toString());
+    }
+    return null;
+  }
+
+  /// GET ALL ORDERS (ADMIN)
+  static Future<List<dynamic>> getOrders() async {
+    final res = await http.get(Uri.parse("$baseUrl/get_orders.php"));
     final data = json.decode(res.body);
 
     if (data is Map && data['status'] == 'success') {
@@ -126,6 +151,83 @@ class ApiService {
     return [];
   }
 
+  /// ✅ GET LAST ORDER BY USER + STATUS BUKTI (TAMBAHAN BARU)
+  static Future<Map<String, dynamic>?> getLastOrderWithStatus(int userId) async {
+    try {
+      final res = await http.get(
+        Uri.parse("$baseUrl/get_last_order.php?user_id=$userId"),
+      );
+
+      if (res.statusCode == 200) {
+        final data = json.decode(res.body);
+        
+        if (data['status'] == 'success') {
+          return {
+            'order_id': data['order_id'],
+            'has_proof': data['has_proof'] ?? false,
+          };
+        }
+      }
+      return null;
+    } catch (e) {
+      print('Error getting last order: $e');
+      return null;
+    }
+  }
+
+  /// GET LAST ORDER BY USER (VERSI LAMA - TETAP DIPERTAHANKAN)
+  static Future<int?> getLastOrderId(int userId) async {
+    final res = await http.get(
+      Uri.parse("$baseUrl/get_last_order.php?user_id=$userId"),
+    );
+
+    final data = json.decode(res.body);
+    return data['order_id'];
+  }
+
+  /// ✅ CEK APAKAH ORDER SUDAH PUNYA BUKTI PEMBAYARAN
+  static Future<bool> checkOrderHasProof(int orderId) async {
+    try {
+      final res = await http.get(
+        Uri.parse("$baseUrl/check_order_proof.php?order_id=$orderId"),
+      );
+
+      if (res.statusCode == 200) {
+        final data = json.decode(res.body);
+        return data['has_proof'] == true;
+      }
+      return false;
+    } catch (e) {
+      print('Error checking proof: $e');
+      return false;
+    }
+  }
+
+  /// UPLOAD BUKTI PEMBAYARAN
+  static Future<bool> uploadBuktiPembayaran(int orderId, File file) async {
+    try {
+      final request = http.MultipartRequest(
+        'POST',
+        Uri.parse("$baseUrl/user/upload_bukti.php"),
+      );
+
+      request.fields['order_id'] = orderId.toString();
+      request.files.add(
+        await http.MultipartFile.fromPath('bukti', file.path),
+      );
+
+      final response = await request.send();
+      final responseBody = await response.stream.bytesToString();
+      
+      print('Upload response: $responseBody'); // ✅ Untuk debugging
+      
+      return response.statusCode == 200;
+    } catch (e) {
+      print('Error uploading: $e');
+      return false;
+    }
+  }
+
   // =====================================================
   // ===================== REPORT ========================
   // =====================================================
@@ -138,12 +240,10 @@ class ApiService {
 
     final decoded = json.decode(res.body);
 
-    // ✅ Jika API sudah Map → langsung pakai
     if (decoded is Map<String, dynamic>) {
       return decoded;
     }
 
-    // ✅ Jika API return List → ubah ke Map kosong
     return {
       "status": "failed",
       "total_transaksi": 0,
@@ -153,10 +253,7 @@ class ApiService {
 
   /// LAPORAN GLOBAL
   static Future<List<dynamic>> getLaporanGlobal() async {
-    final res = await http.get(
-      Uri.parse("$baseUrl/admin/laporan_global.php"),
-    );
-
+    final res = await http.get(Uri.parse("$baseUrl/admin/laporan_global.php"));
     final data = json.decode(res.body);
 
     if (data is Map && data['status'] == 'success') {
@@ -180,5 +277,27 @@ class ApiService {
       return data['data'];
     }
     return [];
+  }
+
+  /// UPDATE ORDER STATUS
+  static Future<bool> updateOrderStatus(
+    int orderId,
+    String status,
+  ) async {
+    final res = await http.post(
+      Uri.parse(
+        "$baseUrl/admin/update_order_status.php",
+      ),
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: {
+        "order_id": orderId.toString(),
+        "status": status,
+      },
+    );
+
+    final data = jsonDecode(res.body);
+    return data['status'] == 'success';
   }
 }

@@ -1,3 +1,4 @@
+
   import 'package:flutter/material.dart';
   import 'package:firebase_auth/firebase_auth.dart';
   import 'package:google_sign_in/google_sign_in.dart';
@@ -7,6 +8,7 @@
   import 'konsumen_page.dart';
   import 'laporan_page.dart';
   import '../pages/login_page.dart';
+  import 'orders_page.dart';
 
   class AdminDashboardPage extends StatelessWidget {
     const AdminDashboardPage({super.key});
@@ -41,6 +43,20 @@
         body: ListView(
           padding: const EdgeInsets.all(16),
           children: [
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.shopping_cart, color: Colors.red),
+                title: const Text("Pesanan Masuk"),
+                subtitle: const Text("Lihat daftar pesanan terbaru (Realtime)"),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const AdminOrdersPage(),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
             Card(
               child: ListTile(
                 leading: const Icon(Icons.inventory, color: Colors.blue),

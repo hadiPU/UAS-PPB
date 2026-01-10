@@ -13,22 +13,57 @@ class ProductDetailPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(title: Text(product.name)),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Image.asset(
-              "assets/images/${product.image}",
-              height: 200,
+            // ===== IMAGE =====
+            Center(
+              child: Image.network(
+                "http://192.168.10.115/blangkis/assets/images/${product.image}",
+                height: 200,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return const Icon(
+                    Icons.image_not_supported,
+                    size: 120,
+                    color: Colors.grey,
+                  );
+                },
+              ),
             ),
+
             const SizedBox(height: 16),
-            Text(product.name,
-                style:
-                    const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+
+            // ===== NAME =====
+            Text(
+              product.name,
+              style: const TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
             const SizedBox(height: 8),
-            Text(rupiah.format(product.price)),
-            const SizedBox(height: 8),
-            Text(product.description ?? "-"),
+
+            // ===== PRICE =====
+            Text(
+              rupiah.format(product.price),
+              style: const TextStyle(
+                fontSize: 18,
+                color: Colors.green,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            // ===== DESCRIPTION =====
+            Text(
+              product.description ?? "-",
+              style: const TextStyle(fontSize: 16),
+            ),
           ],
         ),
       ),

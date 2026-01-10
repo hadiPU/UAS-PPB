@@ -46,4 +46,7 @@ foreach ($items as $item) {
   );
 }
 
-echo json_encode(["status"=>"success"]);
+echo json_encode([
+  "status" => "success",
+  "order_id" => $order_id
+]);

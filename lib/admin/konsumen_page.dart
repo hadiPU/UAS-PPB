@@ -16,7 +16,12 @@ class _AdminKonsumenPageState extends State<AdminKonsumenPage> {
     final res = await http.get(
       Uri.parse("http://192.168.10.115/blangkis/api/admin/konsumen_crud.php"),
     );
-    data = json.decode(res.body);
+    final decoded = json.decode(res.body);
+    if (decoded is Map && decoded['status'] == 'success') {
+      data = decoded['data'];
+    } else {
+      data = [];
+    }
     setState(() {});
   }
 
