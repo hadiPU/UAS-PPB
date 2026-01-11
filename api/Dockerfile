@@ -12,9 +12,11 @@ COPY api/ /var/www/html/
 # Copy Assets
 COPY assets/ /var/www/html/assets/
 
-# Permissions: Give www-data access to html and assets
+# Permissions: Give www-data access to necessary folders
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 755 /var/www/html \
-    && chmod -R 775 /var/www/html/assets
+    && chmod -R 777 /var/www/html/assets \
+    && mkdir -p /var/www/html/user/uploads \
+    && chmod -R 777 /var/www/html/user/uploads
 
 WORKDIR /var/www/html

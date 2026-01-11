@@ -14,10 +14,13 @@ if (!$order_id || !isset($_FILES['bukti'])) {
   exit;
 }
 
-// FIX: Save to assets/images so it matches add_order.php
-$uploadDir = __DIR__ . "/../../assets/images/";
+// FIX: Save to user/uploads as requested
+$uploadDir = __DIR__ . "/uploads/";
 if (!is_dir($uploadDir)) {
-  mkdir($uploadDir, 0777, true);
+  if (!mkdir($uploadDir, 0777, true)) {
+    echo json_encode(["status" => "failed", "msg" => "Gagal membuat folder uploads"]);
+    exit;
+  }
 }
 
 // Validate Extension
@@ -36,15 +39,19 @@ if (!move_uploaded_file($_FILES['bukti']['tmp_name'], $targetPath)) {
   exit;
 }
 
-// FIX: Store ONLY filename, not full URL
+// FIX: Store path relative to assets/images so Admin can read it
+// Admin URL: .../assets/images/ + $path
+// Result:    .../assets/images/../../user/uploads/$filename
+$dbPath = "../../user/uploads/" . $filename;
+
 $sql = "UPDATE orders 
-        SET bukti_pembayaran='$filename', status='MENUNGGU'
+        SET bukti_pembayaran='$dbPath', status='MENUNGGU'
         WHERE id='$order_id'";
 
 if (mysqli_query($conn, $sql)) {
   echo json_encode([
     "status" => "success",
-    "filename" => $filename
+    "filename" => $dbPath
   ]);
 } else {
   echo json_encode([
