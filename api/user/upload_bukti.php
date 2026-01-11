@@ -27,7 +27,7 @@ if (!move_uploaded_file($_FILES['bukti']['tmp_name'], $targetPath)) {
 }
 
 // URL PUBLIC (PENTING)
-$fileUrl = "http://localhost/blangkis/api/user/uploads/" . $filename;
+$fileUrl = "http://100.79.136.94/blangkis/api/user/uploads/" . $filename;
 
 $sql = "UPDATE orders 
         SET bukti_pembayaran='$fileUrl', status='MENUNGGU'

@@ -23,7 +23,7 @@ class _AdminOrdersPageState extends State<AdminOrdersPage> {
 
   // 🔥 BASE URL UNTUK GAMBAR
   final String baseImageUrl =
-      "http://192.168.10.115/blangkis/api/";
+      "http://100.79.136.94/blangkis/api/";
 
   @override
   void initState() {

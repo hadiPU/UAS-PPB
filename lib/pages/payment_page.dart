@@ -76,7 +76,7 @@ class _PaymentPageState extends State<PaymentPage> {
     try {
       final req = http.MultipartRequest(
         'POST',
-        Uri.parse("http://192.168.10.115/blangkis/api/add_order.php"),
+        Uri.parse("http://100.79.136.94/blangkis/api/add_order.php"),
       );
 
       req.fields['user_id'] = widget.userId.toString();
@@ -104,7 +104,7 @@ class _PaymentPageState extends State<PaymentPage> {
         _msg("Pembayaran berhasil");
 
         final url =
-            "http://192.168.10.115/blangkis/api/admin/export_nota_pdf.php?id=$orderId";
+            "http://100.79.136.94/blangkis/api/admin/export_nota_pdf.php?id=$orderId";
         launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
 
         // 🔥 INI SATU-SATUNYA YANG WAJIB DIGANTI
