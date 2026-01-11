@@ -18,25 +18,32 @@ class _RegisterPageState extends State<RegisterPage> {
   Future<void> register() async {
     setState(() => loading = true);
 
-    final res = await http.post(
-      Uri.parse("http://100.79.136.94:8080/register.php"),
-      body: {
-        "email": emailC.text.trim(),
-        "password": passC.text.trim(),
-      },
-    );
-
-    setState(() => loading = false);
-    final data = json.decode(res.body);
-
-    if (data['status'] == 'success') {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Registrasi berhasil")),
+    try {
+      final res = await http.post(
+        Uri.parse("http://100.79.136.94:8080/register.php"),
+        body: {
+          "email": emailC.text.trim(),
+          "password": passC.text.trim(),
+        },
       );
-      Navigator.pop(context);
-    } else {
+
+      setState(() => loading = false);
+      final data = json.decode(res.body);
+
+      if (data['status'] == 'success') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Registrasi berhasil")),
+        );
+        Navigator.pop(context);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Registrasi gagal")),
+        );
+      }
+    } catch (e) {
+      setState(() => loading = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Registrasi gagal")),
+        SnackBar(content: Text("Error: $e")),
       );
     }
   }

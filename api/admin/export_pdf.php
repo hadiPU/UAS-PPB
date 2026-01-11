@@ -1,13 +1,13 @@
 <?php
 require_once __DIR__ . '/../config.php';
-require_once 'C:/xampp/htdocs/blangkis/api/fpdf/fpdf.php';
+require_once '../fpdf/fpdf.php';
 
 $pdf = new FPDF();
 $pdf->AddPage();
 
 // JUDUL
 $pdf->SetFont('Helvetica', 'B', 14);
-$pdf->Cell(0,8,'Tanggal Cetak: '.date('d-m-Y H:i'),0,1,'C');
+$pdf->Cell(0, 8, 'Tanggal Cetak: ' . date('d-m-Y H:i'), 0, 1, 'C');
 $pdf->Ln(5);
 
 // HEADER TABEL
