@@ -14,7 +14,7 @@ class _AdminKonsumenPageState extends State<AdminKonsumenPage> {
 
   Future<void> load() async {
     final res = await http.get(
-      Uri.parse("http://100.79.136.94:8080/blangkis/api/admin/konsumen_crud.php"),
+      Uri.parse("http://100.79.136.94:8080/admin/konsumen_crud.php"),
     );
     final decoded = json.decode(res.body);
     if (decoded is Map && decoded['status'] == 'success') {
