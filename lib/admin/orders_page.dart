@@ -82,31 +82,47 @@ class _AdminOrdersPageState extends State<AdminOrdersPage> {
               const SizedBox(height: 8),
 
               // ====== GAMBAR BUKTI ======
+              // ====== GAMBAR BUKTI ======
               if (bukti != null && bukti.isNotEmpty)
-                GestureDetector(
-                  onTap: () {
-                    showDialog(
-                      context: context,
-                      builder: (_) => Dialog(
-                        child: InteractiveViewer(
-                          child: Image.network(
-                            baseImageUrl + bukti,
-                            fit: BoxFit.contain,
+                Builder(
+                  builder: (ctx) {
+                    // FIX: Handle relative path from DB (../../user/uploads/...)
+                    // Clean URL: remove anything before the last slash if it contains "uploads"
+                    String cleanUrl = baseImageUrl + bukti;
+                    if (bukti.contains("user/uploads")) {
+                         // Convert: assets/images/../../user/uploads/file.jpg
+                         // To:      user/uploads/file.jpg
+                         cleanUrl = "http://100.79.136.94:8080/user/uploads/" + bukti.split('/').last;
+                    }
+
+                    return GestureDetector(
+                      onTap: () {
+                        showDialog(
+                          context: context,
+                          builder: (_) => Dialog(
+                            child: InteractiveViewer(
+                              child: Image.network(
+                                cleanUrl,
+                                fit: BoxFit.contain,
+                              ),
+                            ),
                           ),
+                        );
+                      },
+                      child: Image.network(
+                        cleanUrl,
+                        height: 220,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Column(
+                          children: [
+                            const Icon(Icons.broken_image, size: 50, color: Colors.grey),
+                            Text("Gagal memuat: $cleanUrl", style: const TextStyle(fontSize: 10)),
+                          ],
                         ),
                       ),
                     );
-                  },
-                  child: Image.network(
-                    baseImageUrl + bukti,
-                    height: 220,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => const Text(
-                      "Gagal memuat gambar",
-                      style: TextStyle(color: Colors.red),
-                    ),
-                  ),
+                  }
                 )
               else
                 const Text(
@@ -149,6 +165,7 @@ class _AdminOrdersPageState extends State<AdminOrdersPage> {
   // UPDATE STATUS (POST)
   // =========================
   Future<void> _updateStatus(int orderId, String status) async {
+    print("Updating Order $orderId to $status"); // DEBUG
     final ok = await ApiService.updateOrderStatus(orderId, status);
 
     if (!mounted) return;
@@ -160,7 +177,7 @@ class _AdminOrdersPageState extends State<AdminOrdersPage> {
       _fetchOrders();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Gagal update status")),
+        const SnackBar(content: Text("Gagal update status (Cek Log)")),
       );
     }
   }
