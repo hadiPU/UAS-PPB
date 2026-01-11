@@ -15,4 +15,10 @@ if (mysqli_num_rows($check) == 0) {
 } else {
     echo json_encode(["status" => "success", "message" => "Column 'status' already exists"]);
 }
+
+// CHECK BUKTI PEMBAYARAN
+$check2 = mysqli_query($conn, "SHOW COLUMNS FROM orders LIKE 'bukti_pembayaran'");
+if (mysqli_num_rows($check2) == 0) {
+    mysqli_query($conn, "ALTER TABLE orders ADD COLUMN bukti_pembayaran VARCHAR(255) DEFAULT NULL");
+}
 ?>
