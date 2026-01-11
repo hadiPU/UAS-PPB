@@ -1,5 +1,6 @@
 <?php
 include '../config.php';
+header('Content-Type: application/json');
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
   echo json_encode(["status" => "failed", "msg" => "Request bukan POST"]);
@@ -13,30 +14,37 @@ if (!$order_id || !isset($_FILES['bukti'])) {
   exit;
 }
 
-$uploadDir = __DIR__ . "/uploads/";
+// FIX: Save to assets/images so it matches add_order.php
+$uploadDir = __DIR__ . "/../../assets/images/";
 if (!is_dir($uploadDir)) {
   mkdir($uploadDir, 0777, true);
 }
 
-$filename = time() . "_" . basename($_FILES['bukti']['name']);
-$targetPath = $uploadDir . $filename;
-
-if (!move_uploaded_file($_FILES['bukti']['tmp_name'], $targetPath)) {
-  echo json_encode(["status" => "failed", "msg" => "Gagal upload file"]);
+// Validate Extension
+$ext = strtolower(pathinfo($_FILES['bukti']['name'], PATHINFO_EXTENSION));
+$allowed = ['jpg', 'jpeg', 'png', 'gif'];
+if (!in_array($ext, $allowed)) {
+  echo json_encode(["status" => "failed", "msg" => "Format file tidak valid"]);
   exit;
 }
 
-// URL PUBLIC (PENTING)
-$fileUrl = "http://100.79.136.94:8080/blangkis/api/user/uploads/" . $filename;
+$filename = "bukti_dashboard_" . time() . "_" . rand(100, 999) . "." . $ext;
+$targetPath = $uploadDir . $filename;
 
+if (!move_uploaded_file($_FILES['bukti']['tmp_name'], $targetPath)) {
+  echo json_encode(["status" => "failed", "msg" => "Gagal upload file ke server"]);
+  exit;
+}
+
+// FIX: Store ONLY filename, not full URL
 $sql = "UPDATE orders 
-        SET bukti_pembayaran='$fileUrl', status='MENUNGGU'
+        SET bukti_pembayaran='$filename', status='MENUNGGU'
         WHERE id='$order_id'";
 
 if (mysqli_query($conn, $sql)) {
   echo json_encode([
     "status" => "success",
-    "url" => $fileUrl
+    "filename" => $filename
   ]);
 } else {
   echo json_encode([
@@ -44,3 +52,4 @@ if (mysqli_query($conn, $sql)) {
     "msg" => mysqli_error($conn)
   ]);
 }
+?>

@@ -3,12 +3,13 @@ include 'config.php';
 
 $user_id = $_GET['user_id'] ?? 0;
 
-$q = mysqli_query($conn,
+$q = mysqli_query(
+  $conn,
   "SELECT id 
    FROM orders 
    WHERE user_id='$user_id'
      AND status='MENUNGGU'
-     AND bukti_pembayaran IS NULL
+     AND (bukti_pembayaran IS NULL OR bukti_pembayaran = '')
    ORDER BY id DESC
    LIMIT 1"
 );
