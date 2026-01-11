@@ -2,7 +2,9 @@ version: '3.8'
 
 services:
   web:
-    build: ./api
+    build:
+      context: .
+      dockerfile: api/Dockerfile
     ports:
       - "8080:80"
     environment:

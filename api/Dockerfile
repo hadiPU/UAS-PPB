@@ -6,9 +6,11 @@ RUN docker-php-ext-install mysqli
 # Enable mod_rewrite (optional, but good practice for API/web apps)
 RUN a2enmod rewrite
 
-# Copy local code to the container image.
-# We copy the 'api' directory contents to /var/www/html
-COPY . /var/www/html/
+# Copy API files to root web directory
+COPY api/ /var/www/html/
+
+# Copy Assets to assets directory
+COPY assets/ /var/www/html/assets/
 
 # Set working directory
 WORKDIR /var/www/html
