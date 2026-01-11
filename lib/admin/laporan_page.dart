@@ -50,7 +50,7 @@ class _AdminLaporanPageState extends State<AdminLaporanPage> {
                     label: const Text("Export PDF"),
                     onPressed: () {
                       launchUrl(Uri.parse(
-                        "http://100.79.136.94/blangkis/api/admin/export_pdf.php",
+                        "http://100.79.136.94:8080/blangkis/api/admin/export_pdf.php",
                       ));
                     },
                   ),
@@ -62,7 +62,7 @@ class _AdminLaporanPageState extends State<AdminLaporanPage> {
                     label: const Text("Export Excel"),
                     onPressed: () {
                       launchUrl(Uri.parse(
-                        "http://100.79.136.94/blangkis/api/admin/export_excel.php",
+                        "http://100.79.136.94:8080/blangkis/api/admin/export_excel.php",
                       ));
                     },
                   ),

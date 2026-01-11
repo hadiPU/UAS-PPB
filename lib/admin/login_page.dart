@@ -19,7 +19,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
     setState(() => loading = true);
 
     final res = await http.post(
-      Uri.parse("http://100.79.136.94/blangkis/api/admin/login_admin.php"),
+      Uri.parse("http://100.79.136.94:8080/blangkis/api/admin/login_admin.php"),
       body: {
         "email": emailC.text,
         "password": passC.text,

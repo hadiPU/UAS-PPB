@@ -36,7 +36,7 @@ class _LoginPageState extends State<LoginPage> {
     setState(() => loading = true);
 
     final res = await http.post(
-      Uri.parse("http://100.79.136.94/blangkis/api/login.php"),
+      Uri.parse("http://100.79.136.94:8080/blangkis/api/login.php"),
       body: {
         "email": emailC.text.trim(),
         "password": passC.text.trim(),
@@ -87,7 +87,7 @@ class _LoginPageState extends State<LoginPage> {
       final user = userCred.user!;
 
       final res = await http.post(
-        Uri.parse("http://100.79.136.94/blangkis/api/oauth_google.php"),
+        Uri.parse("http://100.79.136.94:8080/blangkis/api/oauth_google.php"),
         body: {
           "email": user.email ?? "",
           "name": user.displayName ?? "",

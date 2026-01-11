@@ -1,8 +1,12 @@
 <?php
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
+
 $host = getenv('DB_HOST') ?: "localhost";
 $user = getenv('DB_USER') ?: "root";
 $pass = getenv('DB_PASS') ?: "";
-$db   = getenv('DB_NAME') ?: "blangkis";
+$db = getenv('DB_NAME') ?: "blangkis";
 
 $conn = mysqli_connect($host, $user, $pass, $db);
 

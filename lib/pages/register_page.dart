@@ -19,7 +19,7 @@ class _RegisterPageState extends State<RegisterPage> {
     setState(() => loading = true);
 
     final res = await http.post(
-      Uri.parse("http://100.79.136.94/blangkis/api/register.php"),
+      Uri.parse("http://100.79.136.94:8080/blangkis/api/register.php"),
       body: {
         "email": emailC.text.trim(),
         "password": passC.text.trim(),

@@ -21,7 +21,7 @@ class ProductDetailPage extends StatelessWidget {
             // ===== IMAGE =====
             Center(
               child: Image.network(
-                "http://100.79.136.94/blangkis/assets/images/${product.image}",
+                "http://100.79.136.94:8080/blangkis/assets/images/${product.image}",
                 height: 200,
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {

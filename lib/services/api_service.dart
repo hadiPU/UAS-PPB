@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 import '../models/product.dart';
 
 class ApiService {
-  static const String baseUrl = "http://100.79.136.94/blangkis/api";
+  static const String baseUrl = "http://100.79.136.94:8080/blangkis/api";
 
   // =====================================================
   // ===================== PRODUCT =======================
