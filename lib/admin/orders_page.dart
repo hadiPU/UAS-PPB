@@ -112,7 +112,7 @@ class _AdminOrdersPageState extends State<AdminOrdersPage> {
                       child: Image.network(
                         cleanUrl,
                         height: 220,
-                        width: double.infinity,
+                        width: MediaQuery.of(context).size.width,
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => Column(
                           children: [
