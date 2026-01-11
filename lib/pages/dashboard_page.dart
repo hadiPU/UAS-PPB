@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -28,7 +27,7 @@ class _DashboardPageState extends State<DashboardPage> {
   final Map<int, int> quantities = {};
   double total = 0;
 
-  int? currentOrderId; // 🔑 order terakhir yang menunggu bukti
+  int? currentOrderId;
   int totalTerjual = 0;
   int totalPenjualan = 0;
 
@@ -47,7 +46,6 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   // ===================== LOAD DATA =====================
-
   Future<void> loadProducts() async {
     try {
       products = await ApiService.getProducts();
@@ -60,7 +58,6 @@ class _DashboardPageState extends State<DashboardPage> {
   Future<void> loadDashboardSummary() async {
     try {
       final res = await ApiService.getSalesSummary();
-
       if (res.isNotEmpty && res['status'] == 'success') {
         final d = res['data'];
         totalTerjual = int.tryParse(d['terjual'].toString()) ?? 0;
@@ -74,7 +71,6 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   // ===================== CART =====================
-
   void addToCart(Product p) {
     if (p.id == null) return;
     quantities[p.id!] = (quantities[p.id!] ?? 0) + 1;
@@ -111,7 +107,6 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   // ===================== PAYMENT =====================
-
   Future<void> openPayment() async {
     if (total <= 0) return;
 
@@ -126,15 +121,13 @@ class _DashboardPageState extends State<DashboardPage> {
       ),
     );
 
-    // 🔥 AMBIL ORDER TERBARU DARI DATABASE
+    // ambil order terakhir setelah pembayaran
     final orderId = await ApiService.getLastOrderId(widget.userId);
-
     if (orderId != null) {
       setState(() {
         currentOrderId = orderId;
       });
-
-      resetCart(); // ✅ TOTAL PASTI 0
+      resetCart();
       loadDashboardSummary();
     }
   }
@@ -169,101 +162,54 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Future<void> pickFromGallery() async {
-  // 🔥 CEK ORDER TERBARU DARI DATABASE
-  final orderId = await ApiService.getLastOrderId(widget.userId);
-  
-  if (orderId == null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Silakan lakukan pembayaran terlebih dahulu")),
-    );
-    return;
+    final orderId = await ApiService.getLastOrderNeedProof(widget.userId);
+
+    if (orderId == null) {
+      _msg("Tidak ada pesanan yang menunggu bukti pembayaran");
+      return;
+    }
+
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+
+    if (image == null) return;
+
+    buktiPembayaran = File(image.path);
+
+    final success =
+        await ApiService.uploadBuktiPembayaran(orderId, buktiPembayaran!);
+
+    success ? _msg("Bukti pembayaran berhasil diupload") : _msg("Upload gagal");
   }
 
-  // ✅ Cek apakah order ini sudah upload bukti atau belum
-  final hasProof = await ApiService.checkOrderHasProof(orderId);
-  
-  if (hasProof) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Bukti pembayaran sudah diupload sebelumnya")),
-    );
-    return;
+  Future<void> pickFromCamera() async {
+    final XFile? image =
+        await _picker.pickImage(source: ImageSource.camera, imageQuality: 80);
+    if (image == null) return;
+
+    final orderId = await ApiService.getLastOrderNeedProof(widget.userId);
+    if (orderId == null) {
+      _msg("Silakan lakukan pembayaran terlebih dahulu");
+      return;
+    }
+
+    final hasProof = await ApiService.checkOrderHasProof(orderId);
+    if (hasProof) {
+      _msg("Bukti pembayaran sudah diupload sebelumnya");
+      return;
+    }
+
+    buktiPembayaran = File(image.path);
+    final success =
+        await ApiService.uploadBuktiPembayaran(orderId, buktiPembayaran!);
+
+    success ? _msg("Bukti pembayaran berhasil diupload") : _msg("Upload gagal");
   }
 
-  final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-
-  if (image == null) return;
-
-  buktiPembayaran = File(image.path);
-
-  final success = await ApiService.uploadBuktiPembayaran(
-    orderId, // ✅ Pakai orderId dari database
-    buktiPembayaran!,
-  );
-
-  if (success) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Bukti pembayaran berhasil diupload")),
-    );
-    setState(() {
-      currentOrderId = null;
-    });
-    loadDashboardSummary();
-  } else {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Upload gagal")),
-    );
-  }
-}
-
-Future<void> pickFromCamera() async {
-  // 🔥 CEK ORDER TERBARU DARI DATABASE
-  final orderId = await ApiService.getLastOrderId(widget.userId);
-  
-  if (orderId == null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Silakan lakukan pembayaran terlebih dahulu")),
-    );
-    return;
+  void _msg(String s) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(s)));
   }
 
-  // ✅ Cek apakah order ini sudah upload bukti atau belum
-  final hasProof = await ApiService.checkOrderHasProof(orderId);
-  
-  if (hasProof) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Bukti pembayaran sudah diupload sebelumnya")),
-    );
-    return;
-  }
-
-  final XFile? image =
-      await _picker.pickImage(source: ImageSource.camera, imageQuality: 80);
-
-  if (image == null) return;
-
-  buktiPembayaran = File(image.path);
-
-  final success = await ApiService.uploadBuktiPembayaran(
-    orderId, // ✅ Pakai orderId dari database
-    buktiPembayaran!,
-  );
-
-  if (success) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Bukti pembayaran berhasil diupload")),
-    );
-    setState(() {
-      currentOrderId = null;
-    });
-    loadDashboardSummary();
-  } else {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Upload gagal")),
-    );
-  }
-}
   // ===================== LOGOUT =====================
-
   Future<void> logout(BuildContext context) async {
     await FirebaseAuth.instance.signOut();
     await GoogleSignIn().signOut();
@@ -276,7 +222,6 @@ Future<void> pickFromCamera() async {
   }
 
   // ===================== MENU =====================
-
   PopupMenuButton<String> buildMenu() {
     return PopupMenuButton<String>(
       onSelected: (v) {
@@ -307,7 +252,6 @@ Future<void> pickFromCamera() async {
   }
 
   // ===================== UI =====================
-
   Widget statCard({
     required IconData icon,
     required String title,
@@ -324,14 +268,11 @@ Future<void> pickFromCamera() async {
             children: [
               Icon(icon, color: Colors.white, size: 30),
               const SizedBox(height: 8),
-              Text(
-                value,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              Text(value,
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold)),
               Text(title, style: const TextStyle(color: Colors.white70)),
             ],
           ),
@@ -349,84 +290,53 @@ Future<void> pickFromCamera() async {
       ),
       body: Column(
         children: [
-          // ===== STAT =====
           Padding(
             padding: const EdgeInsets.all(12),
             child: Row(
               children: [
                 statCard(
-                  icon: Icons.inventory,
-                  title: "Produk",
-                  value: products.length.toString(),
-                  color: Colors.blue,
-                ),
+                    icon: Icons.inventory,
+                    title: "Produk",
+                    value: products.length.toString(),
+                    color: Colors.blue),
                 const SizedBox(width: 8),
                 statCard(
-                  icon: Icons.shopping_cart,
-                  title: "Terjual",
-                  value: totalTerjual.toString(),
-                  color: Colors.orange,
-                ),
+                    icon: Icons.shopping_cart,
+                    title: "Terjual",
+                    value: totalTerjual.toString(),
+                    color: Colors.orange),
                 const SizedBox(width: 8),
                 statCard(
-                  icon: Icons.attach_money,
-                  title: "Penjualan",
-                  value: rupiah.format(totalPenjualan),
-                  color: Colors.green,
-                ),
+                    icon: Icons.attach_money,
+                    title: "Penjualan",
+                    value: rupiah.format(totalPenjualan),
+                    color: Colors.green),
               ],
             ),
           ),
-
-          // ===== INFO ORDER =====
-          if (currentOrderId != null)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Text(
-                "Order ID: $currentOrderId (Menunggu Bukti Pembayaran)",
-                style: const TextStyle(
-                  color: Colors.orange,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-
-          // ===== UPLOAD =====
           Padding(
             padding: const EdgeInsets.all(12),
             child: ElevatedButton.icon(
               onPressed: showUploadDialog,
               icon: const Icon(Icons.upload_file),
               label: const Text("Upload Bukti Pembayaran"),
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                backgroundColor: Colors.blue,
-              ),
             ),
           ),
-
-          // ===== PRODUCT LIST =====
           Expanded(
             child: ListView.builder(
               itemCount: products.length,
               itemBuilder: (_, i) {
                 final p = products[i];
                 final qty = quantities[p.id] ?? 0;
-
                 return Card(
                   child: ListTile(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => ProductDetailPage(product: p),
-                        ),
-                      );
-                    },
-                    title: Text(
-                      p.name,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => ProductDetailPage(product: p)),
                     ),
+                    title: Text(p.name,
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
                     subtitle: Text(rupiah.format(p.price)),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -447,8 +357,6 @@ Future<void> pickFromCamera() async {
               },
             ),
           ),
-
-          // ===== CART BAR =====
           InkWell(
             onTap: total > 0 ? openPayment : null,
             child: Container(
@@ -458,18 +366,13 @@ Future<void> pickFromCamera() async {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    "Item: ${quantities.values.fold(0, (a, b) => a + b)}",
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                  Text(
-                    "Total Jual: ${rupiah.format(total)}",
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  Text("Item: ${quantities.values.fold(0, (a, b) => a + b)}",
+                      style: const TextStyle(color: Colors.white)),
+                  Text("Total Jual: ${rupiah.format(total)}",
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold)),
                 ],
               ),
             ),

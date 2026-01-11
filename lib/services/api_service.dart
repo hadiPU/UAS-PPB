@@ -177,13 +177,24 @@ class ApiService {
 
   /// GET LAST ORDER BY USER (VERSI LAMA - TETAP DIPERTAHANKAN)
   static Future<int?> getLastOrderId(int userId) async {
+  try {
     final res = await http.get(
       Uri.parse("$baseUrl/get_last_order.php?user_id=$userId"),
     );
 
+    if (res.statusCode != 200) return null;
+
     final data = json.decode(res.body);
-    return data['order_id'];
+    if (data['status'] == 'success') {
+      return int.tryParse(data['order_id'].toString());
+    }
+    return null;
+  } catch (e) {
+    print("getLastOrderId error: $e");
+    return null;
   }
+}
+
 
   /// ✅ CEK APAKAH ORDER SUDAH PUNYA BUKTI PEMBAYARAN
   static Future<bool> checkOrderHasProof(int orderId) async {
@@ -205,28 +216,50 @@ class ApiService {
 
   /// UPLOAD BUKTI PEMBAYARAN
   static Future<bool> uploadBuktiPembayaran(int orderId, File file) async {
-    try {
-      final request = http.MultipartRequest(
-        'POST',
-        Uri.parse("$baseUrl/user/upload_bukti.php"),
-      );
+  try {
+    final request = http.MultipartRequest(
+      'POST',
+      Uri.parse("$baseUrl/user/upload_bukti.php"),
+    );
 
-      request.fields['order_id'] = orderId.toString();
-      request.files.add(
-        await http.MultipartFile.fromPath('bukti', file.path),
-      );
+    request.fields['order_id'] = orderId.toString();
+    request.files.add(
+      await http.MultipartFile.fromPath('bukti', file.path),
+    );
 
-      final response = await request.send();
-      final responseBody = await response.stream.bytesToString();
-      
-      print('Upload response: $responseBody'); // ✅ Untuk debugging
-      
-      return response.statusCode == 200;
-    } catch (e) {
-      print('Error uploading: $e');
-      return false;
-    }
+    final response = await request.send();
+    final responseBody = await response.stream.bytesToString();
+
+    print('Upload response: $responseBody');
+
+    if (response.statusCode != 200) return false;
+
+    final decoded = jsonDecode(responseBody);
+    return decoded['status'] == 'success';
+  } catch (e) {
+    print('Error uploading: $e');
+    return false;
   }
+}
+static Future<int?> getLastOrderNeedProof(int userId) async {
+  try {
+    final res = await http.get(
+      Uri.parse("$baseUrl/get_last_unpaid_order.php?user_id=$userId"),
+    );
+
+    if (res.statusCode != 200) return null;
+
+    final data = jsonDecode(res.body);
+    if (data['status'] == 'success') {
+      return int.tryParse(data['order_id'].toString());
+    }
+    return null;
+  } catch (e) {
+    print("getLastOrderNeedProof error: $e");
+    return null;
+  }
+}
+
 
   // =====================================================
   // ===================== REPORT ========================

@@ -1,26 +1,46 @@
 <?php
-$conn = new mysqli("localhost", "root", "", "blangkis");
+include '../config.php';
 
-$order_id = $_POST['order_id'];
-
-if (!isset($_FILES['bukti'])) {
-  echo json_encode(["status" => "error", "msg" => "No file"]);
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+  echo json_encode(["status" => "failed", "msg" => "Request bukan POST"]);
   exit;
 }
 
-$filename = time() . "_" . $_FILES['bukti']['name'];
-$path = "uploads/" . $filename;
+$order_id = $_POST['order_id'] ?? null;
 
-move_uploaded_file($_FILES['bukti']['tmp_name'], $path);
+if (!$order_id || !isset($_FILES['bukti'])) {
+  echo json_encode(["status" => "failed", "msg" => "Data tidak lengkap"]);
+  exit;
+}
 
-// UPDATE KE TABEL ORDERS
+$uploadDir = __DIR__ . "/uploads/";
+if (!is_dir($uploadDir)) {
+  mkdir($uploadDir, 0777, true);
+}
+
+$filename = time() . "_" . basename($_FILES['bukti']['name']);
+$targetPath = $uploadDir . $filename;
+
+if (!move_uploaded_file($_FILES['bukti']['tmp_name'], $targetPath)) {
+  echo json_encode(["status" => "failed", "msg" => "Gagal upload file"]);
+  exit;
+}
+
+// URL PUBLIC (PENTING)
+$fileUrl = "http://localhost/blangkis/api/user/uploads/" . $filename;
+
 $sql = "UPDATE orders 
-        SET bukti_pembayaran = '$path', status = 'MENUNGGU'
-        WHERE id = '$order_id'";
+        SET bukti_pembayaran='$fileUrl', status='MENUNGGU'
+        WHERE id='$order_id'";
 
-$conn->query($sql);
-
-echo json_encode([
-  "status" => "success",
-  "file" => $path
-]);
+if (mysqli_query($conn, $sql)) {
+  echo json_encode([
+    "status" => "success",
+    "url" => $fileUrl
+  ]);
+} else {
+  echo json_encode([
+    "status" => "failed",
+    "msg" => mysqli_error($conn)
+  ]);
+}

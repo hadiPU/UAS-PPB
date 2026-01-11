@@ -15,6 +15,16 @@ class _AdminOrdersPageState extends State<AdminOrdersPage> {
   List<dynamic> _orders = [];
   bool _loading = true;
 
+  final rupiah = NumberFormat.currency(
+    locale: 'id_ID',
+    symbol: 'Rp ',
+    decimalDigits: 0,
+  );
+
+  // 🔥 BASE URL UNTUK GAMBAR
+  final String baseImageUrl =
+      "http://192.168.10.115/blangkis/api/";
+
   @override
   void initState() {
     super.initState();
@@ -34,6 +44,7 @@ class _AdminOrdersPageState extends State<AdminOrdersPage> {
     try {
       final data = await ApiService.getOrders();
       if (!mounted) return;
+
       setState(() {
         _orders = data;
         _loading = false;
@@ -44,98 +55,121 @@ class _AdminOrdersPageState extends State<AdminOrdersPage> {
     }
   }
 
-  // ================= VERIFIKASI =================
+  // ==================================================
+  // DIALOG DETAIL + BUKTI PEMBAYARAN (INI YANG DIPERBAIKI)
+  // ==================================================
+  void _showVerifyDialog(Map order) {
+    final int id = int.parse(order['id'].toString());
+    final String status = order['status'] ?? 'MENUNGGU';
+    final String? bukti = order['bukti_pembayaran'];
 
-  void _openVerifikasiDialog(Map item) {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text("Verifikasi Pembayaran"),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (item['bukti'] != null && item['bukti'] != '')
-              Image.network(
-                "http://192.168.10.115/blangkis/assets/bukti/${item['bukti']}",
-                height: 200,
-                errorBuilder: (_, __, ___) =>
-                    const Icon(Icons.image_not_supported, size: 100),
-              )
-            else
-              const Text("Belum ada bukti pembayaran"),
-            const SizedBox(height: 12),
-            const Text("Setujui pembayaran ini?"),
-          ],
+        title: const Text("Detail Pembayaran"),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text("Order ID: $id"),
+              Text("Status: $status"),
+              const SizedBox(height: 12),
+
+              const Text(
+                "Bukti Pembayaran:",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+
+              // ====== GAMBAR BUKTI ======
+              if (bukti != null && bukti.isNotEmpty)
+                GestureDetector(
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (_) => Dialog(
+                        child: InteractiveViewer(
+                          child: Image.network(
+                            baseImageUrl + bukti,
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                  child: Image.network(
+                    baseImageUrl + bukti,
+                    height: 220,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => const Text(
+                      "Gagal memuat gambar",
+                      style: TextStyle(color: Colors.red),
+                    ),
+                  ),
+                )
+              else
+                const Text(
+                  "Belum ada bukti pembayaran",
+                  style: TextStyle(color: Colors.red),
+                ),
+            ],
+          ),
         ),
         actions: [
           TextButton(
-            onPressed: () async {
-              Navigator.pop(context); // ✅ TUTUP DIALOG DULU
-
-              try {
-                final ok = await ApiService.updateOrderStatus(
-                  item['id'],
-                  'DITOLAK',
-                );
-
-                if (ok) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Pembayaran ditolak")),
-                  );
-                  _fetchOrders();
-                }
-              } catch (_) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Error koneksi server")),
-                );
-              }
-            },
-            child: const Text(
-              "Tolak",
-              style: TextStyle(color: Colors.red),
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Tutup"),
+          ),
+          if (status == 'MENUNGGU') ...[
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                await _updateStatus(id, 'DITOLAK');
+              },
+              child: const Text(
+                "Tolak",
+                style: TextStyle(color: Colors.red),
+              ),
             ),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(context); // ✅ TUTUP DIALOG DULU
-
-              try {
-                final ok = await ApiService.updateOrderStatus(
-                  item['id'],
-                  'LUNAS',
-                );
-
-                if (ok) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Pembayaran disetujui")),
-                  );
-                  _fetchOrders();
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Gagal verifikasi")),
-                  );
-                }
-              } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Error koneksi server")),
-                );
-              }
-            },
-            child: const Text("ACC"),
-          ),
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                await _updateStatus(id, 'LUNAS');
+              },
+              child: const Text("ACC"),
+            ),
+          ]
         ],
       ),
     );
   }
 
+  // =========================
+  // UPDATE STATUS (POST)
+  // =========================
+  Future<void> _updateStatus(int orderId, String status) async {
+    final ok = await ApiService.updateOrderStatus(orderId, status);
+
+    if (!mounted) return;
+
+    if (ok) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Status berhasil diubah ke $status")),
+      );
+      _fetchOrders();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Gagal update status")),
+      );
+    }
+  }
+
+  // =========================
+  // UI
+  // =========================
   @override
   Widget build(BuildContext context) {
-    final rupiah = NumberFormat.currency(
-      locale: 'id_ID',
-      symbol: 'Rp ',
-      decimalDigits: 0,
-    );
-
     return Scaffold(
       appBar: AppBar(
         title: const Text("Pesanan Masuk"),
@@ -143,7 +177,7 @@ class _AdminOrdersPageState extends State<AdminOrdersPage> {
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () => _fetchOrders(),
-          )
+          ),
         ],
       ),
       body: _loading && _orders.isEmpty
@@ -152,14 +186,14 @@ class _AdminOrdersPageState extends State<AdminOrdersPage> {
               ? const Center(child: Text("Belum ada pesanan"))
               : ListView.builder(
                   itemCount: _orders.length,
-                  itemBuilder: (ctx, i) {
-                    final item = _orders[i];
-                    final id = item['id'];
-                    final email = item['email'] ?? 'User';
-                    final total =
-                        double.tryParse(item['total'].toString()) ?? 0;
-                    final date = item['created_at'] ?? '-';
-                    final status = item['status'] ?? 'MENUNGGU';
+                  itemBuilder: (_, i) {
+                    final o = _orders[i];
+                    final int id = int.parse(o['id'].toString());
+                    final String email = o['email'] ?? 'User';
+                    final double total =
+                        double.tryParse(o['total'].toString()) ?? 0;
+                    final String date = o['created_at'] ?? '-';
+                    final String status = o['status'] ?? 'MENUNGGU';
 
                     return Card(
                       margin: const EdgeInsets.symmetric(
@@ -172,9 +206,7 @@ class _AdminOrdersPageState extends State<AdminOrdersPage> {
                         ),
                         title: Text(
                           email,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -189,37 +221,23 @@ class _AdminOrdersPageState extends State<AdminOrdersPage> {
                                     : status == 'DITOLAK'
                                         ? Colors.red
                                         : Colors.orange,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                        trailing: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              rupiah.format(total),
-                              style: const TextStyle(
-                                color: Colors.green,
                                 fontWeight: FontWeight.bold,
-                                fontSize: 16,
                               ),
                             ),
-                            const SizedBox(height: 6),
-                            if (status != 'LUNAS')
-                              ElevatedButton(
-                                onPressed: () => _openVerifikasiDialog(item),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.orange,
-                                  minimumSize: const Size(90, 32),
-                                ),
-                                child: const Text(
-                                  "Verifikasi",
-                                  style: TextStyle(fontSize: 12),
-                                ),
-                              ),
                           ],
                         ),
+                        trailing: Text(
+                          rupiah.format(total),
+                          style: const TextStyle(
+                            color: Colors.green,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        // 🔥 ADMIN BISA TAP SEMUA ORDER UNTUK LIHAT BUKTI
+                        onTap: () {
+                          _showVerifyDialog(o);
+                        },
                       ),
                     );
                   },

@@ -1,49 +1,30 @@
 <?php
-include '../config.php'; // ← pastikan path ini BENAR
+include '../config.php';
 
-
-// DEBUG: lihat data masuk
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-  echo json_encode([
-    "status" => "failed",
-    "msg" => "Request bukan POST"
-  ]);
+  echo json_encode(["status"=>"failed","msg"=>"POST only"]);
   exit;
 }
 
-$order_id = $_POST['order_id'] ?? '';
-$status   = $_POST['status'] ?? '';
+$order_id = $_POST['order_id'] ?? null;
+$status   = $_POST['status'] ?? null;
 
-// DEBUG kalau kosong
-if ($order_id === '' || $status === '') {
-  echo json_encode([
-    "status" => "failed",
-    "msg" => "Data tidak lengkap",
-    "debug" => $_POST
-  ]);
+if (!$order_id || !$status) {
+  echo json_encode(["status"=>"failed","msg"=>"Data tidak lengkap"]);
   exit;
 }
 
 $allowed = ['MENUNGGU','LUNAS','DITOLAK'];
 if (!in_array($status, $allowed)) {
-  echo json_encode([
-    "status" => "failed",
-    "msg" => "Status tidak valid"
-  ]);
+  echo json_encode(["status"=>"failed","msg"=>"Status invalid"]);
   exit;
 }
 
-$q = mysqli_query($conn,
+$q = mysqli_query(
+  $conn,
   "UPDATE orders SET status='$status' WHERE id='$order_id'"
 );
 
-if ($q) {
-  echo json_encode([
-    "status" => "success"
-  ]);
-} else {
-  echo json_encode([
-    "status" => "failed",
-    "msg" => mysqli_error($conn)
-  ]);
-}
+echo json_encode([
+  "status" => $q ? "success" : "failed"
+]);

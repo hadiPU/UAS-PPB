@@ -3,15 +3,15 @@ include 'config.php';
 
 $q = mysqli_query($conn,
   "SELECT 
-      o.id,
-      o.user_id,
-      o.total,
-      o.bayar,
-      o.kembalian,
-      o.status,
-      o.bukti_pembayaran AS bukti,
-      o.created_at,
-      u.email
+     o.id,
+     o.user_id,
+     o.total,
+     o.bayar,
+     o.kembalian,
+     o.status,
+     o.bukti_pembayaran,
+     o.created_at,
+     u.email
    FROM orders o
    JOIN users u ON o.user_id = u.id
    ORDER BY o.id DESC"
@@ -26,4 +26,3 @@ echo json_encode([
   "status" => "success",
   "data" => $data
 ]);
-?>
