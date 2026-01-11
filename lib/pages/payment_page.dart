@@ -113,7 +113,7 @@ class _PaymentPageState extends State<PaymentPage> {
         _msg(data['msg'] ?? "Gagal menyimpan transaksi");
       }
     } catch (e) {
-      _msg("Error koneksi server");
+      _msg("Error: $e");
     }
 
     setState(() => loading = false);

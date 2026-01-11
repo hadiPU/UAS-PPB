@@ -1,10 +1,11 @@
 <?php
 include 'config.php';
 
-$username = $_POST['username'];
+$username = $_POST['email'];
 $password = md5($_POST['password']);
 
-$q = mysqli_query($conn,
+$q = mysqli_query(
+  $conn,
   "SELECT id, email, role 
    FROM users 
    WHERE email='$username' 
