@@ -1,7 +1,7 @@
 <?php
 include '../config.php';
 
-$action = $_POST['action'] ?? '';
+$action = $_POST['action'] ?? $_GET['action'] ?? '';
 
 switch($action){
 
@@ -43,7 +43,6 @@ switch($action){
 
   case "delete":
     $id = $_POST['id'];
-
     mysqli_query($conn,"DELETE FROM products WHERE id='$id'");
     echo json_encode(["status"=>"success","message"=>"Produk dihapus"]);
   break;
