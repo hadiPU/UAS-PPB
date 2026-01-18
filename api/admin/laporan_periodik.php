@@ -1,8 +1,24 @@
 <?php
 include '../config.php';
 
-$from = $_GET['from'];
-$to   = $_GET['to'];
+$filter = $_GET['filter'] ?? "1day";
+
+switch($filter){
+  case "lasthour":
+    $where = "created_at >= NOW() - INTERVAL 1 HOUR";
+    break;
+
+  case "7days":
+    $where = "created_at >= NOW() - INTERVAL 7 DAY";
+    break;
+
+  case "28days":
+    $where = "created_at >= NOW() - INTERVAL 28 DAY";
+    break;
+
+  default:
+    $where = "created_at >= NOW() - INTERVAL 1 DAY";
+}
 
 $q = mysqli_query($conn, "
   SELECT 
@@ -10,7 +26,7 @@ $q = mysqli_query($conn, "
     COUNT(id) AS transaksi,
     SUM(total) AS total
   FROM orders
-  WHERE DATE(created_at) BETWEEN '$from' AND '$to'
+  WHERE $where
   GROUP BY DATE(created_at)
   ORDER BY tanggal ASC
 ");
@@ -27,5 +43,6 @@ while ($row = mysqli_fetch_assoc($q)) {
 echo json_encode([
   "status" => "success",
   "type" => "periodik",
+  "filter" => $filter,
   "data" => $data
 ]);

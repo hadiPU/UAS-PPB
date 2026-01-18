@@ -152,7 +152,8 @@ class ApiService {
   }
 
   /// ✅ GET LAST ORDER BY USER + STATUS BUKTI (TAMBAHAN BARU)
-  static Future<Map<String, dynamic>?> getLastOrderWithStatus(int userId) async {
+  static Future<Map<String, dynamic>?> getLastOrderWithStatus(
+      int userId) async {
     try {
       final res = await http.get(
         Uri.parse("$baseUrl/get_last_order.php?user_id=$userId"),
@@ -160,7 +161,7 @@ class ApiService {
 
       if (res.statusCode == 200) {
         final data = json.decode(res.body);
-        
+
         if (data['status'] == 'success') {
           return {
             'order_id': data['order_id'],
@@ -177,24 +178,23 @@ class ApiService {
 
   /// GET LAST ORDER BY USER (VERSI LAMA - TETAP DIPERTAHANKAN)
   static Future<int?> getLastOrderId(int userId) async {
-  try {
-    final res = await http.get(
-      Uri.parse("$baseUrl/get_last_order.php?user_id=$userId"),
-    );
+    try {
+      final res = await http.get(
+        Uri.parse("$baseUrl/get_last_order.php?user_id=$userId"),
+      );
 
-    if (res.statusCode != 200) return null;
+      if (res.statusCode != 200) return null;
 
-    final data = json.decode(res.body);
-    if (data['status'] == 'success') {
-      return int.tryParse(data['order_id'].toString());
+      final data = json.decode(res.body);
+      if (data['status'] == 'success') {
+        return int.tryParse(data['order_id'].toString());
+      }
+      return null;
+    } catch (e) {
+      print("getLastOrderId error: $e");
+      return null;
     }
-    return null;
-  } catch (e) {
-    print("getLastOrderId error: $e");
-    return null;
   }
-}
-
 
   /// ✅ CEK APAKAH ORDER SUDAH PUNYA BUKTI PEMBAYARAN
   static Future<bool> checkOrderHasProof(int orderId) async {
@@ -216,50 +216,50 @@ class ApiService {
 
   /// UPLOAD BUKTI PEMBAYARAN
   static Future<bool> uploadBuktiPembayaran(int orderId, File file) async {
-  try {
-    final request = http.MultipartRequest(
-      'POST',
-      Uri.parse("$baseUrl/user/upload_bukti.php"),
-    );
+    try {
+      final request = http.MultipartRequest(
+        'POST',
+        Uri.parse("$baseUrl/user/upload_bukti.php"),
+      );
 
-    request.fields['order_id'] = orderId.toString();
-    request.files.add(
-      await http.MultipartFile.fromPath('bukti', file.path),
-    );
+      request.fields['order_id'] = orderId.toString();
+      request.files.add(
+        await http.MultipartFile.fromPath('bukti', file.path),
+      );
 
-    final response = await request.send();
-    final responseBody = await response.stream.bytesToString();
+      final response = await request.send();
+      final responseBody = await response.stream.bytesToString();
 
-    print('Upload response: $responseBody');
+      print('Upload response: $responseBody');
 
-    if (response.statusCode != 200) return false;
+      if (response.statusCode != 200) return false;
 
-    final decoded = jsonDecode(responseBody);
-    return decoded['status'] == 'success';
-  } catch (e) {
-    print('Error uploading: $e');
-    return false;
-  }
-}
-static Future<int?> getLastOrderNeedProof(int userId) async {
-  try {
-    final res = await http.get(
-      Uri.parse("$baseUrl/get_last_unpaid_order.php?user_id=$userId"),
-    );
-
-    if (res.statusCode != 200) return null;
-
-    final data = jsonDecode(res.body);
-    if (data['status'] == 'success') {
-      return int.tryParse(data['order_id'].toString());
+      final decoded = jsonDecode(responseBody);
+      return decoded['status'] == 'success';
+    } catch (e) {
+      print('Error uploading: $e');
+      return false;
     }
-    return null;
-  } catch (e) {
-    print("getLastOrderNeedProof error: $e");
-    return null;
   }
-}
 
+  static Future<int?> getLastOrderNeedProof(int userId) async {
+    try {
+      final res = await http.get(
+        Uri.parse("$baseUrl/get_last_unpaid_order.php?user_id=$userId"),
+      );
+
+      if (res.statusCode != 200) return null;
+
+      final data = jsonDecode(res.body);
+      if (data['status'] == 'success') {
+        return int.tryParse(data['order_id'].toString());
+      }
+      return null;
+    } catch (e) {
+      print("getLastOrderNeedProof error: $e");
+      return null;
+    }
+  }
 
   // =====================================================
   // ===================== REPORT ========================
@@ -332,5 +332,22 @@ static Future<int?> getLastOrderNeedProof(int userId) async {
 
     final data = jsonDecode(res.body);
     return data['status'] == 'success';
+  }
+
+  static Future<List> getLaporan({String filter = "1day"}) async {
+    String url;
+
+    if (filter == "all") {
+      url = "http://100.79.136.94:8080/admin/laporan_global.php";
+    } else {
+      url =
+          "http://100.79.136.94:8080/admin/laporan_periodik.php?filter=$filter";
+    }
+
+    final res = await http.get(Uri.parse(url));
+
+    final body = jsonDecode(res.body);
+
+    return body["data"] ?? [];
   }
 }
