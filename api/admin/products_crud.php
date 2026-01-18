@@ -15,9 +15,12 @@ switch($action){
   case "add":
     $name  = $_POST['name'];
     $price = $_POST['price'];
-    $stock = $_POST['stock'];
+    $image = $_POST['image'];
+    $desc  = $_POST['description'];
 
-    mysqli_query($conn,"INSERT INTO products (name,price,stock) VALUES ('$name','$price','$stock')");
+    mysqli_query($conn,"INSERT INTO products (name,price,image,description)
+    VALUES ('$name','$price','$image','$desc')");
+
     echo json_encode(["status"=>"success","message"=>"Produk ditambahkan"]);
   break;
 
@@ -25,14 +28,22 @@ switch($action){
     $id    = $_POST['id'];
     $name  = $_POST['name'];
     $price = $_POST['price'];
-    $stock = $_POST['stock'];
+    $image = $_POST['image'];
+    $desc  = $_POST['description'];
 
-    mysqli_query($conn,"UPDATE products SET name='$name', price='$price', stock='$stock' WHERE id='$id'");
+    mysqli_query($conn,"UPDATE products SET
+      name='$name',
+      price='$price',
+      image='$image',
+      description='$desc'
+    WHERE id='$id'");
+
     echo json_encode(["status"=>"success","message"=>"Produk diupdate"]);
   break;
 
   case "delete":
     $id = $_POST['id'];
+
     mysqli_query($conn,"DELETE FROM products WHERE id='$id'");
     echo json_encode(["status"=>"success","message"=>"Produk dihapus"]);
   break;

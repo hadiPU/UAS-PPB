@@ -26,6 +26,9 @@ class ApiService {
       String name, String price, String image, String desc) async {
     final res = await http.post(
       Uri.parse("$baseUrl/admin/products_crud.php"),
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
       body: {
         "action": "add",
         "name": name,
