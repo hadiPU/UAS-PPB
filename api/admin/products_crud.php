@@ -1,7 +1,7 @@
 <?php
 include '../config.php';
 
-$action = $_GET['action'] ?? '';
+$action = $_POST['action'] ?? '';
 
 switch($action){
 
